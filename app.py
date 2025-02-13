@@ -14,7 +14,7 @@ default_tasks = [
     "Community-Management", "Newsletter schreiben", "Lead Magnets erstellen", "Marktforschung", "Buchhaltung"
 ]
 
-# Session State initialisieren
+# Session State initialisieren, um Neustarts zu vermeiden
 if "selected_tasks" not in st.session_state:
     st.session_state.selected_tasks = default_tasks.copy()
 if "custom_tasks" not in st.session_state:
@@ -22,22 +22,26 @@ if "custom_tasks" not in st.session_state:
 
 # Tätigkeiten auswählen
 st.write("Wähle deine Tätigkeiten:")
-selected_tasks = st.multiselect("Tätigkeiten auswählen:", st.session_state.selected_tasks + st.session_state.custom_tasks, default=st.session_state.selected_tasks)
+selected_tasks = st.multiselect(
+    "Tätigkeiten auswählen:", 
+    options=st.session_state.selected_tasks + st.session_state.custom_tasks, 
+    default=st.session_state.selected_tasks
+)
 
 # Eigene Tätigkeiten hinzufügen
 new_task = st.text_input("Eigene Tätigkeit hinzufügen und Enter drücken:")
 if new_task:
-    if new_task not in st.session_state.custom_tasks:
+    if new_task not in st.session_state.custom_tasks and new_task not in st.session_state.selected_tasks:
         st.session_state.custom_tasks.append(new_task)
-        st.experimental_rerun()
+        st.rerun()
 
 # Bewertungen für Freude und Kompetenz erfassen
 data = []
 if selected_tasks:
     for task in selected_tasks:
         with st.expander(task):
-            enjoyment = st.slider("Freude an der Aufgabe", 1, 10, 5, key=f"enjoy_{task}")
-            proficiency = st.slider("Kompetenz in der Aufgabe", 1, 10, 5, key=f"prof_{task}")
+            enjoyment = st.slider(f"Freude an {task}", 1, 10, 5, key=f"enjoy_{task}")
+            proficiency = st.slider(f"Kompetenz in {task}", 1, 10, 5, key=f"prof_{task}")
             data.append([task, enjoyment, proficiency])
 else:
     st.warning("Bitte wähle mindestens eine Tätigkeit aus.")
@@ -64,34 +68,38 @@ if data:
     st.dataframe(df)
 
     # Visualisierung der Matrix
-    fig, ax = plt.subplots(figsize=(10,10))
-    colors = {"Automatisierungs-Zone": "#FF6961", "KI-Unterstützungs-Zone": "#77DD77", "Gefahren-Zone": "#FDFD96", "Genie-Zone": "#779ECB"}
+    fig, ax = plt.subplots(figsize=(8,8))
+    colors = {
+        "Automatisierungs-Zone": "#FF6961", 
+        "KI-Unterstützungs-Zone": "#77DD77", 
+        "Gefahren-Zone": "#FDFD96", 
+        "Genie-Zone": "#779ECB"
+    }
 
     # Achsen als Kreuz zeichnen
     ax.axhline(5, color='black', linestyle='-', linewidth=2)
     ax.axvline(5, color='black', linestyle='-', linewidth=2)
 
     # Quadranten benennen
-    ax.text(8, 9, "Genie-Zone", fontsize=14, fontweight='bold', color='#779ECB')
-    ax.text(1, 9, "Gefahren-Zone", fontsize=14, fontweight='bold', color='#FDFD96')
-    ax.text(8, 1, "KI-Unterstützungs-Zone", fontsize=14, fontweight='bold', color='#77DD77')
-    ax.text(1, 1, "Automatisierungs-Zone", fontsize=14, fontweight='bold', color='#FF6961')
+    ax.text(8, 9, "Genie-Zone", fontsize=12, fontweight='bold', color='#779ECB')
+    ax.text(1, 9, "Gefahren-Zone", fontsize=12, fontweight='bold', color='#FDFD96')
+    ax.text(8, 1, "KI-Unterstützungs-Zone", fontsize=12, fontweight='bold', color='#77DD77')
+    ax.text(1, 1, "Automatisierungs-Zone", fontsize=12, fontweight='bold', color='#FF6961')
 
     # Punkte in der Matrix darstellen
     for _, row in df.iterrows():
-        ax.scatter(row["Kompetenz"], row["Freude"], s=200, color=colors[row["Kategorie"]], edgecolors="black")
-        ax.text(row["Kompetenz"], row["Freude"], row["Aufgabe"], fontsize=9, ha='right')
+        ax.scatter(row["Kompetenz"], row["Freude"], s=100, color=colors[row["Kategorie"]], edgecolors="black")
+        ax.text(row["Kompetenz"], row["Freude"], row["Aufgabe"], fontsize=8, ha='right')
 
     ax.set_xticks([])
     ax.set_yticks([])
     ax.set_xlabel("")
     ax.set_ylabel("")
-    ax.set_title("Genie-Zone-Matrix", fontsize=16, fontweight='bold')
+    ax.set_title("Genie-Zone-Matrix", fontsize=14, fontweight='bold')
     ax.grid(False)
     st.pyplot(fig)
 
     # PDF-Download
-    st.write("Lade deine Matrix als PDF herunter:")
     def generate_pdf():
         pdf = FPDF()
         pdf.set_auto_page_break(auto=True, margin=15)
