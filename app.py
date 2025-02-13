@@ -5,7 +5,7 @@ from fpdf import FPDF
 
 # Titel der App
 st.title("Genie-Zone-Matrix für Online-Coaches")
-st.write("Wähle hier Tätigkeiten aus, die du durchführst, und ergänze darunter eigene Tätigkeiten.")
+st.write("Wähle Tätigkeiten aus, die du durchführst, und bewerte sie nach Freude und Kompetenz.")
 
 # Standardaufgabenliste
 default_tasks = [
@@ -14,30 +14,28 @@ default_tasks = [
     "Community-Management", "Newsletter schreiben", "Lead Magnets erstellen", "Marktforschung", "Buchhaltung"
 ]
 
-# Session State für persistente Speicherung von Aufgaben
-if "tasks" not in st.session_state:
-    st.session_state.tasks = default_tasks.copy()
+# Session State für persistente Speicherung
+if "selected_tasks" not in st.session_state:
+    st.session_state.selected_tasks = []
 
-# Nutzer kann Aufgaben auswählen
-st.write("Wähle deine Tätigkeiten aus:")
-selected_tasks = st.multiselect("Tätigkeiten auswählen:", st.session_state.tasks, default=st.session_state.tasks)
+# Tätigkeiten auswählen
+st.write("Wähle deine Tätigkeiten:")
+selected_tasks = st.multiselect("Tätigkeiten auswählen:", default_tasks, default=st.session_state.selected_tasks)
 
-# Nutzer kann eigene Aufgaben hinzufügen
+# Eigene Tätigkeiten hinzufügen
 new_task = st.text_input("Eigene Tätigkeit hinzufügen und Enter drücken:")
-if new_task:
-    if new_task not in st.session_state.tasks:
-        st.session_state.tasks.append(new_task)
-        st.session_state.new_task = ""
-        st.rerun()
+if new_task and new_task not in selected_tasks:
+    selected_tasks.append(new_task)
+    st.session_state.selected_tasks = selected_tasks
+    st.rerun()
 
 # Bewertungen für Freude und Kompetenz erfassen
 data = []
 for task in selected_tasks:
-    st.subheader(task)
-    enjoyment = st.slider(f"Freude an {task}", 1, 10, 5, key=f"enjoy_{task}")
-    proficiency = st.slider(f"Kompetenz in {task}", 1, 10, 5, key=f"prof_{task}")
-    st.markdown("---")  # Trennlinie zwischen den Aufgaben
-    data.append([task, enjoyment, proficiency])
+    with st.expander(task):
+        enjoyment = st.slider("Freude an der Aufgabe", 1, 10, 5, key=f"enjoy_{task}")
+        proficiency = st.slider("Kompetenz in der Aufgabe", 1, 10, 5, key=f"prof_{task}")
+        data.append([task, enjoyment, proficiency])
 
 # DataFrame erstellen
 df = pd.DataFrame(data, columns=["Aufgabe", "Freude", "Kompetenz"])
@@ -55,7 +53,7 @@ def categorize_task(enjoyment, proficiency):
 
 df["Kategorie"] = df.apply(lambda row: categorize_task(row["Freude"], row["Kompetenz"]), axis=1)
 
-# Ergebnisse als Tabelle anzeigen
+# Ergebnisse anzeigen
 st.write("### Deine Genie-Zone-Matrix")
 st.dataframe(df)
 
@@ -86,7 +84,8 @@ ax.set_title("Genie-Zone-Matrix", fontsize=16, fontweight='bold')
 ax.grid(False)
 st.pyplot(fig)
 
-# Funktion zum PDF-Download
+# PDF-Download
+st.write("Lade deine Matrix als PDF herunter:")
 def generate_pdf():
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
