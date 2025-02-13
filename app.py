@@ -43,6 +43,7 @@ if st.session_state.page == 1:
     if new_task and new_task not in st.session_state.custom_tasks and new_task not in default_tasks:
         st.session_state.custom_tasks.append(new_task)
         st.session_state.selected_tasks.append(new_task)
+        st.experimental_rerun()
     
     if st.button("Weiter →"):
         st.session_state.selected_tasks = selected_tasks
@@ -53,10 +54,11 @@ elif st.session_state.page == 2:
     st.write("### Bewerte deine Tätigkeiten nach Freude und Kompetenz")
     ratings = []
     for task in st.session_state.selected_tasks:
-        with st.expander(task):
-            enjoyment = st.slider(f"Freude an {task}", 1, 10, 5, key=f"enjoy_{task}")
-            proficiency = st.slider(f"Kompetenz in {task}", 1, 10, 5, key=f"prof_{task}")
-            ratings.append([task, enjoyment, proficiency])
+        st.write(f"**{task}**")
+        enjoyment = st.slider(f"Freude an {task}", 1, 10, 5, key=f"enjoy_{task}")
+        proficiency = st.slider(f"Kompetenz in {task}", 1, 10, 5, key=f"prof_{task}")
+        ratings.append([task, enjoyment, proficiency])
+        st.markdown("---")  # Trennlinie zwischen den Aufgaben
     
     if st.button("← Zurück"):
         prev_page()
@@ -85,7 +87,7 @@ elif st.session_state.page == 3:
         df["Kategorie"] = df.apply(lambda row: categorize_task(row["Freude"], row["Kompetenz"]), axis=1)
         st.dataframe(df)
         
-        fig, ax = plt.subplots(figsize=(8,8))
+        fig, ax = plt.subplots(figsize=(6,6), dpi=100)
         colors = {
             "Automatisierungs-Zone": "#FF6961", 
             "KI-Unterstützungs-Zone": "#77DD77", 
