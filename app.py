@@ -14,21 +14,27 @@ default_tasks = [
     "Community-Management", "Newsletter schreiben", "Lead Magnets erstellen", "Marktforschung", "Buchhaltung"
 ]
 
+# Session State für persistente Speicherung von Aufgaben
+if "tasks" not in st.session_state:
+    st.session_state.tasks = default_tasks.copy()
+
 # Nutzer kann Aufgaben auswählen
 st.write("Wähle deine Tätigkeiten aus:")
-tasks = st.multiselect("Tätigkeiten auswählen:", default_tasks, default=default_tasks)
+selected_tasks = st.multiselect("Tätigkeiten auswählen:", st.session_state.tasks, default=st.session_state.tasks)
 
 # Nutzer kann eigene Aufgaben hinzufügen
 new_task = st.text_input("Eigene Tätigkeit hinzufügen und Enter drücken:")
-if new_task and new_task not in tasks:
-    tasks.append(new_task)
+if new_task:
+    if new_task not in st.session_state.tasks:
+        st.session_state.tasks.append(new_task)
+        st.experimental_rerun()
 
 # Bewertungen für Freude und Kompetenz erfassen
 data = []
-for task in tasks:
+for task in selected_tasks:
     st.subheader(task)
-    enjoyment = st.slider(f"Freude an {task}", 1, 10, 5)
-    proficiency = st.slider(f"Kompetenz in {task}", 1, 10, 5)
+    enjoyment = st.slider(f"Freude an {task}", 1, 10, 5, key=f"enjoy_{task}")
+    proficiency = st.slider(f"Kompetenz in {task}", 1, 10, 5, key=f"prof_{task}")
     st.markdown("---")  # Trennlinie zwischen den Aufgaben
     data.append([task, enjoyment, proficiency])
 
