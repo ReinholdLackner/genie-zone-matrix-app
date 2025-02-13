@@ -27,7 +27,8 @@ new_task = st.text_input("Eigene Tätigkeit hinzufügen und Enter drücken:")
 if new_task:
     if new_task not in st.session_state.tasks:
         st.session_state.tasks.append(new_task)
-        st.experimental_rerun()
+        st.session_state.new_task = ""
+        st.rerun()
 
 # Bewertungen für Freude und Kompetenz erfassen
 data = []
