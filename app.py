@@ -42,7 +42,7 @@ if st.session_state.page == 1:
     new_task = st.text_input("Eigene Tätigkeit hinzufügen und Enter drücken:")
     if new_task and new_task not in st.session_state.custom_tasks and new_task not in default_tasks:
         st.session_state.custom_tasks.append(new_task)
-        st.experimental_rerun()
+        st.session_state.selected_tasks.append(new_task)
     
     if st.button("Weiter →"):
         st.session_state.selected_tasks = selected_tasks
@@ -67,63 +67,51 @@ elif st.session_state.page == 2:
 # **Seite 3: Ergebnisse anzeigen**
 elif st.session_state.page == 3:
     st.write("### Deine Genie-Zone-Matrix")
-    df = pd.DataFrame(st.session_state.ratings, columns=["Aufgabe", "Freude", "Kompetenz"])
-    
-    def categorize_task(enjoyment, proficiency):
-        if enjoyment <= 4 and proficiency <= 4:
-            return "Automatisierungs-Zone"
-        elif 5 <= enjoyment <= 7 and 5 <= proficiency <= 7:
-            return "KI-Unterstützungs-Zone"
-        elif enjoyment >= 8 and proficiency >= 8:
-            return "Genie-Zone"
-        else:
-            return "Gefahren-Zone"
-    
-    df["Kategorie"] = df.apply(lambda row: categorize_task(row["Freude"], row["Kompetenz"]), axis=1)
-    st.dataframe(df)
-    
-    fig, ax = plt.subplots(figsize=(8,8))
-    colors = {
-        "Automatisierungs-Zone": "#FF6961", 
-        "KI-Unterstützungs-Zone": "#77DD77", 
-        "Gefahren-Zone": "#FDFD96", 
-        "Genie-Zone": "#779ECB"
-    }
-    
-    ax.axhline(5, color='black', linestyle='-', linewidth=2)
-    ax.axvline(5, color='black', linestyle='-', linewidth=2)
-    
-    ax.text(8, 9, "Genie-Zone", fontsize=12, fontweight='bold', color='#779ECB')
-    ax.text(1, 9, "Gefahren-Zone", fontsize=12, fontweight='bold', color='#FDFD96')
-    ax.text(8, 1, "KI-Unterstützungs-Zone", fontsize=12, fontweight='bold', color='#77DD77')
-    ax.text(1, 1, "Automatisierungs-Zone", fontsize=12, fontweight='bold', color='#FF6961')
-    
-    for _, row in df.iterrows():
-        ax.scatter(row["Kompetenz"], row["Freude"], s=100, color=colors[row["Kategorie"]], edgecolors="black")
-        ax.text(row["Kompetenz"], row["Freude"], row["Aufgabe"], fontsize=8, ha='right')
-    
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    ax.set_title("Genie-Zone-Matrix", fontsize=14, fontweight='bold')
-    ax.grid(False)
-    st.pyplot(fig)
-    
-    def generate_pdf():
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
-        pdf.cell(200, 10, "Genie-Zone-Matrix Ergebnisse", ln=True, align='C')
-        pdf.ln(10)
-        for index, row in df.iterrows():
-            pdf.cell(200, 10, f"{row['Aufgabe']}: {row['Kategorie']}", ln=True)
-        pdf.output("Genie-Zone-Matrix.pdf")
-        return "Genie-Zone-Matrix.pdf"
+    if not st.session_state.ratings:
+        st.warning("Es sind keine Daten verfügbar. Bitte gehe zurück und wähle Aufgaben aus.")
+    else:
+        df = pd.DataFrame(st.session_state.ratings, columns=["Aufgabe", "Freude", "Kompetenz"])
+        
+        def categorize_task(enjoyment, proficiency):
+            if enjoyment <= 4 and proficiency <= 4:
+                return "Automatisierungs-Zone"
+            elif 5 <= enjoyment <= 7 and 5 <= proficiency <= 7:
+                return "KI-Unterstützungs-Zone"
+            elif enjoyment >= 8 and proficiency >= 8:
+                return "Genie-Zone"
+            else:
+                return "Gefahren-Zone"
+        
+        df["Kategorie"] = df.apply(lambda row: categorize_task(row["Freude"], row["Kompetenz"]), axis=1)
+        st.dataframe(df)
+        
+        fig, ax = plt.subplots(figsize=(8,8))
+        colors = {
+            "Automatisierungs-Zone": "#FF6961", 
+            "KI-Unterstützungs-Zone": "#77DD77", 
+            "Gefahren-Zone": "#FDFD96", 
+            "Genie-Zone": "#779ECB"
+        }
+        
+        ax.axhline(5, color='black', linestyle='-', linewidth=2)
+        ax.axvline(5, color='black', linestyle='-', linewidth=2)
+        
+        ax.text(8, 9, "Genie-Zone", fontsize=12, fontweight='bold', color='#779ECB')
+        ax.text(1, 9, "Gefahren-Zone", fontsize=12, fontweight='bold', color='#FDFD96')
+        ax.text(8, 1, "KI-Unterstützungs-Zone", fontsize=12, fontweight='bold', color='#77DD77')
+        ax.text(1, 1, "Automatisierungs-Zone", fontsize=12, fontweight='bold', color='#FF6961')
+        
+        for _, row in df.iterrows():
+            ax.scatter(row["Kompetenz"], row["Freude"], s=100, color=colors[row["Kategorie"]], edgecolors="black")
+            ax.text(row["Kompetenz"], row["Freude"], row["Aufgabe"], fontsize=8, ha='right')
+        
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_xlabel("")
+        ax.set_ylabel("")
+        ax.set_title("Genie-Zone-Matrix", fontsize=14, fontweight='bold')
+        ax.grid(False)
+        st.pyplot(fig)
     
     if st.button("← Zurück"):
         prev_page()
-    if st.button("PDF herunterladen"):
-        pdf_path = generate_pdf()
-        with open(pdf_path, "rb") as pdf_file:
-            st.download_button(label="Download PDF", data=pdf_file, file_name="Genie-Zone-Matrix.pdf", mime="application/pdf")
