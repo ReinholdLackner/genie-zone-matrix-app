@@ -15,7 +15,11 @@ default_tasks = [
 ]
 
 # Nutzer kann Aufgaben auswählen
-tasks = st.multiselect("Wähle deine Tätigkeiten aus:", default_tasks)
+tasks = []
+st.write("Setze Häkchen bei den Tätigkeiten, die du ausführst:")
+for task in default_tasks:
+    if st.checkbox(task):
+        tasks.append(task)
 
 # Nutzer kann eigene Aufgaben hinzufügen
 st.write("Ergänze eigene Tätigkeiten:")
