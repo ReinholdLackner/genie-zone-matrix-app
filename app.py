@@ -1,92 +1,68 @@
 import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
 
 # Titel der App
-st.title("Genie-Zone-Matrix für Online-Coaches")
-st.write("Wähle Tätigkeiten aus, die du durchführst, und bewerte sie nach Freude und Kompetenz.")
+st.title("Coach-Task-Manager: Überblick über deine wöchentlichen Aufgaben")
 
-# Standardaufgabenliste
-default_tasks = [
-    "1:1 Coaching-Sessions", "Gruppen-Coachings", "Content-Ideen entwickeln", "Social Media Beiträge schreiben",
-    "Videos drehen", "Webinare moderieren", "Sales Calls führen", "Follow-ups mit Leads", "Kunden-Onboarding",
-    "Community-Management", "Newsletter schreiben", "Lead Magnets erstellen", "Marktforschung", "Buchhaltung"
-]
+st.write("Wähle hier deine wöchentlichen Aufgaben aus den vordefinierten Listen oder füge eigene hinzu.")
+
+# Vordefinierte Aufgaben nach Kategorien
+categories = {
+    "Content-Erstellung & Marketing": [
+        "Content-Ideen entwickeln", "Beiträge für Social Media schreiben", "Reels für Social Media drehen",
+        "Podcasts oder Audioformate aufnehmen", "Blogartikel schreiben", "Email-Newsletter schreiben",
+        "Webinare oder Live-Events planen & moderieren", "Content für YouTube oder andere Plattformen produzieren",
+        "Lead Magnets (z.B. E-Books, Checklisten, Webinare) erstellen",
+        "Inhalte für Online-Kurse oder Memberships erstellen", "Content repurposen (z.B. Blogartikel in Social-Media-Posts umwandeln)",
+        "Verkaufsseiten & Landingpages erstellen", "Automatisierte Funnels & E-Mail-Marketing aufsetzen"
+    ],
+    "Vertrieb & Kundengewinnung": [
+        "Vernetzen mit Profilen", "Termine setten im Chat", "Qualifizierungstelefonate führen",
+        "Sales Calls führen", "Angebote versenden", "Sales Calls auswerten", "Follow-up mit Interessenten & Leads",
+        "Angebote & Preise kalkulieren", "Testimonials & Fallstudien sammeln"
+    ],
+    "Kundenbetreuung": [
+        "Fragen beantworten (E-Mail, Whatsapp, Gruppe)", "Community-Management in Gruppen (z.B. Facebook, Telegram, Discord)",
+        "Onboarding neuer Kunden (Einführung, Erwartungen klären)", "Offboarding-Prozess & Kundenbindung verbessern",
+        "Betreuung & Nachbereitung von Coaching-Teilnehmern", "Notizen & Fortschrittsberichte für Kunden führen"
+    ],
+    "Administration & Organisation": [
+        "Kalender & Termine organisieren", "Meetings & Coaching-Sessions planen", "Rechnungen schreiben & Buchhaltung führen",
+        "Tools & Software verwalten (z.B. Zoom, Notion, Kajabi)", "Kundendaten pflegen & verwalten",
+        "Datenschutz & rechtliche Vorgaben beachten", "E-Mails & Anfragen beantworten",
+        "Dokumentationen & Arbeitsabläufe strukturieren"
+    ],
+    "Strategie & Weiterentwicklung": [
+        "Eigene Positionierung & Branding verbessern", "Business-Strategie entwickeln & optimieren",
+        "Markt- & Wettbewerbsanalyse durchführen", "Angebote & Programme weiterentwickeln",
+        "Persönliche Weiterbildung (Kurse, Bücher, Mentoring)", "Preisstrategie & Angebotsstruktur überdenken",
+        "Feedback auswerten & das Coaching-Angebot optimieren"
+    ]
+}
 
 # Session State initialisieren
 if "selected_tasks" not in st.session_state:
     st.session_state.selected_tasks = []
 if "custom_tasks" not in st.session_state:
     st.session_state.custom_tasks = []
-if "ratings" not in st.session_state:
-    st.session_state.ratings = []
 
-# Tätigkeiten auswählen
-st.write("### Wähle deine Tätigkeiten:")
-selected_tasks = st.multiselect("Tätigkeiten auswählen:", default_tasks + st.session_state.custom_tasks, default=st.session_state.selected_tasks)
+# Aufgaben auswählen
+st.write("## Wähle deine Aufgaben aus")
+for category, tasks in categories.items():
+    with st.expander(category):
+        selected = st.multiselect(f"{category}", tasks, default=[task for task in tasks if task in st.session_state.selected_tasks])
+        for task in selected:
+            if task not in st.session_state.selected_tasks:
+                st.session_state.selected_tasks.append(task)
 
-# Eigene Tätigkeiten hinzufügen
-new_task = st.text_input("Eigene Tätigkeit hinzufügen und Enter drücken:")
-if new_task and new_task not in st.session_state.custom_tasks and new_task not in default_tasks:
-    st.session_state.custom_tasks.append(new_task)
-    st.session_state.selected_tasks.append(new_task)
-    st.experimental_rerun()
+# Eigene Aufgaben hinzufügen
+st.write("## Eigene Aufgaben hinzufügen")
+new_task = st.text_input("Neue Aufgabe hinzufügen und Enter drücken:")
+if new_task:
+    if new_task not in st.session_state.custom_tasks and new_task not in st.session_state.selected_tasks:
+        st.session_state.custom_tasks.append(new_task)
+        st.session_state.selected_tasks.append(new_task)
+        st.experimental_rerun()
 
-# Bewertungen für Freude und Kompetenz erfassen
-data = []
-for task in st.session_state.selected_tasks:
-    st.subheader(task)
-    enjoyment = st.slider(f"Freude an {task}", 1, 10, 5, key=f"enjoy_{task}")
-    proficiency = st.slider(f"Kompetenz in {task}", 1, 10, 5, key=f"prof_{task}")
-    st.markdown("---")  # Trennlinie zwischen den Aufgaben
-    data.append([task, enjoyment, proficiency])
-
-# DataFrame erstellen
-if data:
-    df = pd.DataFrame(data, columns=["Aufgabe", "Freude", "Kompetenz"])
-    
-    # Funktion zur Kategorisierung
-    def categorize_task(enjoyment, proficiency):
-        if enjoyment <= 4 and proficiency <= 4:
-            return "Automatisierungs-Zone"
-        elif 5 <= enjoyment <= 7 and 5 <= proficiency <= 7:
-            return "KI-Unterstützungs-Zone"
-        elif enjoyment >= 8 and proficiency >= 8:
-            return "Genie-Zone"
-        else:
-            return "Gefahren-Zone"
-    
-    df["Kategorie"] = df.apply(lambda row: categorize_task(row["Freude"], row["Kompetenz"]), axis=1)
-    
-    # Ergebnisse anzeigen
-    st.write("### Deine Genie-Zone-Matrix")
-    st.dataframe(df)
-    
-    # Visualisierung der Matrix
-    fig, ax = plt.subplots(figsize=(8,8))
-    colors = {
-        "Automatisierungs-Zone": "#FF6961", 
-        "KI-Unterstützungs-Zone": "#77DD77", 
-        "Gefahren-Zone": "#FDFD96", 
-        "Genie-Zone": "#779ECB"
-    }
-    
-    ax.axhline(5, color='black', linestyle='-', linewidth=2)
-    ax.axvline(5, color='black', linestyle='-', linewidth=2)
-    
-    ax.text(8, 9, "Genie-Zone", fontsize=12, fontweight='bold', color='#779ECB')
-    ax.text(1, 9, "Gefahren-Zone", fontsize=12, fontweight='bold', color='#FDFD96')
-    ax.text(8, 1, "KI-Unterstützungs-Zone", fontsize=12, fontweight='bold', color='#77DD77')
-    ax.text(1, 1, "Automatisierungs-Zone", fontsize=12, fontweight='bold', color='#FF6961')
-    
-    for _, row in df.iterrows():
-        ax.scatter(row["Kompetenz"], row["Freude"], s=100, color=colors[row["Kategorie"]], edgecolors="black")
-        ax.text(row["Kompetenz"], row["Freude"], row["Aufgabe"], fontsize=8, ha='right')
-    
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    ax.set_title("Genie-Zone-Matrix", fontsize=14, fontweight='bold')
-    ax.grid(False)
-    st.pyplot(fig)
+# Anzeige der gewählten Aufgaben
+st.write("## Deine ausgewählten Aufgaben")
+st.write(st.session_state.selected_tasks)
