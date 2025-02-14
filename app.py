@@ -29,7 +29,7 @@ def main():
 
     # 1) Session State vorbereiten (Tasks, Kompetenz-/Freude-Werte)
     if "tasks" not in st.session_state:
-        # Angepasste Aufgabenliste
+        # Angepasste Aufgabenliste (17 Aufgaben)
         st.session_state.tasks = [
             # 📌 Content-Erstellung & Marketing
             "Content-Ideen entwickeln",
@@ -117,10 +117,10 @@ def main():
 
     st.write(df)
 
-    # 5) Diagramm: 4 Quadranten (größer, ohne Raster, 0-10)
+    # 5) Diagramm: 4 Quadranten
     st.subheader("Visualisierung deiner Aufgaben in der 4-Quadranten-Matrix (Kompetenz vs. Freude)")
 
-    # Um Überlagerungen zu vermeiden, fügen wir einen kleinen Zufalls-Jitter hinzu
+    # Kleiner Zufalls-Jitter, um Überdeckungen zu vermeiden
     df["Kompetenz_jitter"] = [
         clamp(x + random.uniform(-0.2, 0.2), 0, 10) for x in df["Kompetenz"]
     ]
@@ -128,9 +128,14 @@ def main():
         clamp(y + random.uniform(-0.2, 0.2), 0, 10) for y in df["Freude"]
     ]
 
+    # ACHTUNG: Wir erweitern die Achsen-Domains auf [-2,12], damit Labels bei x=-1 und x=11 sichtbar sind
     base = alt.Chart(df).encode(
-        x=alt.X("Kompetenz_jitter:Q", scale=alt.Scale(domain=[0,10]), title="Kompetenz"),
-        y=alt.Y("Freude_jitter:Q", scale=alt.Scale(domain=[0,10]), title="Freude"),
+        x=alt.X("Kompetenz_jitter:Q", 
+                scale=alt.Scale(domain=[-2,12]), 
+                title="Kompetenz"),
+        y=alt.Y("Freude_jitter:Q", 
+                scale=alt.Scale(domain=[-2,12]), 
+                title="Freude"),
         tooltip=["Aufgabe", "Kompetenz", "Freude", "Zone"]
     )
 
@@ -152,12 +157,12 @@ def main():
     vline = alt.Chart(pd.DataFrame({'x': [5]})).mark_rule(color='gray').encode(x='x')
     hline = alt.Chart(pd.DataFrame({'y': [5]})).mark_rule(color='gray').encode(y='y')
 
-    # Quadrantentitel am Rand platzieren (mit kleiner Schrift)
+    # Quadrantentitel außerhalb des Diagramms (x=-1 / 11, y=2 / 8)
     quadrant_labels_df = pd.DataFrame([
-        {"x": 1,  "y": 1,  "label": "🔴 Automatisierungs-Zone"},
-        {"x": 9,  "y": 1,  "label": "🟡 Gefahren-Zone"},
-        {"x": 1,  "y": 9,  "label": "🟢 KI-Unterstützungs-Zone"},
-        {"x": 9,  "y": 9,  "label": "🔵 Genie-Zone"}
+        {"x": -1, "y": 2, "label": "🔴 Automatisierungs-Zone"},
+        {"x": 11, "y": 2, "label": "🟡 Gefahren-Zone"},
+        {"x": -1, "y": 8, "label": "🟢 KI-Unterstützungs-Zone"},
+        {"x": 11, "y": 8, "label": "🔵 Genie-Zone"}
     ])
     quadrant_labels = alt.Chart(quadrant_labels_df).mark_text(
         fontSize=10,
@@ -169,7 +174,6 @@ def main():
         text='label:N'
     )
 
-    # Layern: Punkte + Labels + Linien + Quadrantentitel
     chart = alt.layer(
         points,
         labels,
@@ -177,8 +181,8 @@ def main():
         hline,
         quadrant_labels
     ).properties(
-        width=900,   # Diagramm breiter
-        height=700   # und höher
+        width=900,
+        height=700
     ).interactive()
 
     # Gitterlinien entfernen & Achsen anpassen
