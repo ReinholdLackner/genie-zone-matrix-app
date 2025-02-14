@@ -1,5 +1,5 @@
 streamlit
 pandas
-matplotlib
-fpdf
 altair
+fpdf
+altair_saver
