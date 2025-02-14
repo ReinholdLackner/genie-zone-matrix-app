@@ -29,37 +29,36 @@ def main():
 
     # 1) Session State vorbereiten (Tasks, Kompetenz-/Freude-Werte)
     if "tasks" not in st.session_state:
-        # Nur 20 Aufgaben
+        # Angepasste Aufgabenliste
         st.session_state.tasks = [
             # 📌 Content-Erstellung & Marketing
             "Content-Ideen entwickeln",
-            "Beiträge für Social Media schreiben",
-            "Reels für Social Media drehen",
-            "Email-Newsletter schreiben",
-            "Lead Magnete (z.B. E-Books, Checklisten, Webinare) erstellen",
-            "Inhalte für Online-Kurse oder Memberships erstellen",
-            "Verkaufsseiten & Landingpages erstellen",
+            "Posts schreiben",
+            "Reels drehen",
+            "Emails schreiben",
+            "Lead Magnete erstellen",
+            "Inhalte für Kurse erstellen",
+            "Landingpages erstellen",
 
             # 📌 Vertrieb & Kundengewinnung
             "Vernetzen mit Profilen",
-            "Termine setten im Chat",
+            "Termine setten",
             "Angebote versenden",
             "Sales Calls auswerten",
 
             # 📌 Kundenbetreuung
-            "Fragen beantworten Email, Whatsapp, Gruppe",
-            "Notizen & Fortschrittsberichte für Kunden führen",
+            "Kundenfragen beantworten",
 
             # 📌 Administration & Organisation
-            "Kalender & Termine organisieren",
-            "Rechnungen schreiben & Buchhaltung führen",
+            "Termine organisieren",
+            "Rechnungen schreiben",
 
             # 📌 Strategie & Weiterentwicklung
-            "Eigene Positionierung & Branding verbessern",
-            "Business-Strategie entwickeln & optimieren",
-            "Markt- & Wettbewerbsanalyse durchführen",
-            "Angebote & Programme weiterentwickeln",
-            "Persönliche Weiterbildung (Kurse, Bücher, Mentoring)",
+            "Positionierung verbessern",
+            "Business-Strategie optimieren",
+            "Marktanalyse durchführen",
+            "Programme weiterentwickeln",
+            "Persönliche Weiterbildung",
         ]
 
     if "competence" not in st.session_state:
@@ -118,7 +117,7 @@ def main():
 
     st.write(df)
 
-    # 5) Diagramm: 4 Quadranten
+    # 5) Diagramm: 4 Quadranten (größer, ohne Raster, 0-10)
     st.subheader("Visualisierung deiner Aufgaben in der 4-Quadranten-Matrix (Kompetenz vs. Freude)")
 
     # Um Überlagerungen zu vermeiden, fügen wir einen kleinen Zufalls-Jitter hinzu
@@ -144,7 +143,7 @@ def main():
     labels = base.mark_text(
         align='left',
         baseline='middle',
-        dx=7  # etwas nach rechts verschieben
+        dx=7
     ).encode(
         text="Aufgabe"
     )
@@ -153,7 +152,7 @@ def main():
     vline = alt.Chart(pd.DataFrame({'x': [5]})).mark_rule(color='gray').encode(x='x')
     hline = alt.Chart(pd.DataFrame({'y': [5]})).mark_rule(color='gray').encode(y='y')
 
-    # Quadrantentitel am Rand platzieren
+    # Quadrantentitel am Rand platzieren (mit kleiner Schrift)
     quadrant_labels_df = pd.DataFrame([
         {"x": 1,  "y": 1,  "label": "🔴 Automatisierungs-Zone"},
         {"x": 9,  "y": 1,  "label": "🟡 Gefahren-Zone"},
@@ -161,7 +160,7 @@ def main():
         {"x": 9,  "y": 9,  "label": "🔵 Genie-Zone"}
     ])
     quadrant_labels = alt.Chart(quadrant_labels_df).mark_text(
-        fontSize=14,
+        fontSize=10,
         fontWeight='bold',
         color='#333'
     ).encode(
@@ -170,22 +169,23 @@ def main():
         text='label:N'
     )
 
+    # Layern: Punkte + Labels + Linien + Quadrantentitel
     chart = alt.layer(
-        points, 
+        points,
         labels,
         vline,
         hline,
         quadrant_labels
     ).properties(
-        width=700,
-        height=600
+        width=900,   # Diagramm breiter
+        height=700   # und höher
     ).interactive()
 
     # Gitterlinien entfernen & Achsen anpassen
     chart = chart.configure_axis(
-        grid=False  # keine Rasterlinien
+        grid=False
     ).configure_view(
-        stroke=None  # kein Rahmen um das Diagramm
+        stroke=None
     )
 
     st.altair_chart(chart, use_container_width=False)
