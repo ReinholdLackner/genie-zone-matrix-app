@@ -61,15 +61,15 @@ def main():
     if "selected" not in st.session_state:
         st.session_state.selected = [False] * len(st.session_state.tasks)
 
+    # Titel der App
     st.title("Coach Aufgabenliste")
 
     # 2) Aufgaben als Checkboxes anzeigen
     st.subheader("Aufgaben auswählen:")
     for i, task in enumerate(st.session_state.tasks):
-        # Checkbox pro Aufgabe
         st.session_state.selected[i] = st.checkbox(
             task,
-            key=f"task_{i}", 
+            key=f"task_{i}",
             value=st.session_state.selected[i]
         )
 
@@ -78,8 +78,6 @@ def main():
     new_task = st.text_input("Aufgabe eingeben:")
     if st.button("Hinzufügen"):
         if new_task.strip() and new_task not in st.session_state.tasks:
-            # Neue Aufgabe an die Liste anhängen und
-            # Selektions-Status entsprechend erweitern
             st.session_state.tasks.append(new_task)
             st.session_state.selected.append(False)
             st.success(f"Aufgabe '{new_task}' hinzugefügt!")
@@ -97,6 +95,6 @@ def main():
     else:
         st.info("Noch keine Aufgaben ausgewählt.")
 
-# Streamlit ruft main() bei App-Start auf
+# Einstiegspunkt für Streamlit
 if __name__ == "__main__":
     main()
