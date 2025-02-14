@@ -9,7 +9,7 @@ def get_zone(competence, joy):
     🔴 (niedrige Kompetenz, niedrige Freude)
     🟡 (hohe Kompetenz, niedrige Freude)
     🟢 (niedrige Kompetenz, hohe Freude)
-    🔵 (hohe Kompetenz, hohe Freude)
+    🔵 (hohe Freude, hohe Kompetenz)
     """
     if competence <= 5 and joy <= 5:
         return "🔴 Automatisierungs-Zone"
@@ -140,25 +140,63 @@ def main():
     # 5) Diagramm: 4 Quadranten
     st.subheader("Visualisierung deiner Aufgaben in der 4-Quadranten-Matrix (Kompetenz vs. Freude)")
 
-    # Altair-Chart: Punktekdiagramm
+    # Basischart (Altair)
     base = alt.Chart(df).encode(
         x=alt.X("Kompetenz", scale=alt.Scale(domain=[1,10])),
         y=alt.Y("Freude", scale=alt.Scale(domain=[1,10])),
         tooltip=["Aufgabe", "Kompetenz", "Freude", "Zone"]
     )
 
+    # Punkte
     points = base.mark_circle(size=100).encode(
         color="Zone"
     )
 
-    # Linien bei x=5.5 und y=5.5, um die Quadranten klar zu trennen
-    # (Weil <=5 = niedrige Kompetenz/Freude und >5 = hohe Kompetenz/Freude)
+    # Textlabels (klein neben den Punkten)
+    labels = base.mark_text(
+        align='left',
+        baseline='middle',
+        dx=7  # bisschen nach rechts verschieben
+    ).encode(
+        text="Aufgabe"
+    )
+
+    # Vertikale und horizontale Linien (Trennlinien für Quadranten)
     vline = alt.Chart(pd.DataFrame({'x': [5.5]})).mark_rule(color='gray').encode(x='x')
     hline = alt.Chart(pd.DataFrame({'y': [5.5]})).mark_rule(color='gray').encode(y='y')
 
-    chart = alt.layer(points, vline, hline).interactive()
+    # Quadrantentitel: Koordinaten für die Beschriftungen in den vier Quadranten
+    quadrant_labels_df = pd.DataFrame([
+        {"x": 2.5, "y": 2.5, "label": "🔴 Automatisierungs-Zone"},
+        {"x": 8,   "y": 2.5, "label": "🟡 Gefahren-Zone"},
+        {"x": 2.5, "y": 8,   "label": "🟢 KI-Unterstützungs-Zone"},
+        {"x": 8,   "y": 8,   "label": "🔵 Genie-Zone"}
+    ])
+    quadrant_labels = alt.Chart(quadrant_labels_df).mark_text(
+        align='center',
+        baseline='middle',
+        fontSize=14,
+        fontWeight='bold',
+        color='#333'
+    ).encode(
+        x='x',
+        y='y',
+        text='label'
+    )
 
-    st.altair_chart(chart, use_container_width=True)
+    # Layern: Punkte + Labels + Linien + Quadrantentitel
+    chart = alt.layer(
+        points, 
+        labels,
+        vline,
+        hline,
+        quadrant_labels
+    ).properties(
+        width=700,
+        height=600
+    ).interactive()
+
+    st.altair_chart(chart, use_container_width=False)
 
     st.markdown(
         """
