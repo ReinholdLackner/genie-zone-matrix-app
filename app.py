@@ -9,7 +9,7 @@ def get_zone(competence, joy):
     🔴 (niedrige Kompetenz, niedrige Freude)
     🟡 (hohe Kompetenz, niedrige Freude)
     🟢 (niedrige Kompetenz, hohe Freude)
-    🔵 (hohe Freude, hohe Kompetenz)
+    🔵 (hohe Kompetenz, hohe Freude)
     """
     if competence <= 5 and joy <= 5:
         return "🔴 Automatisierungs-Zone"
@@ -31,44 +31,27 @@ def main():
             "Beiträge für Social Media schreiben",
             "Reels für Social Media drehen",
             "Podcasts oder Audioformate aufnehmen",
-            "Blogartikel schreiben",
             "Email-Newsletter schreiben",
-            "Webinare oder Live-Events planen & moderieren",
-            "Content für YouTube oder andere Plattformen produzieren",
             "Lead Magnets (z.B. E-Books, Checklisten, Webinare) erstellen",
             "Inhalte für Online-Kurse oder Memberships erstellen",
             "Content repurposen (z.B. Blogartikel in Social-Media-Posts umwandeln)",
             "Verkaufsseiten & Landingpages erstellen",
-            "Automatisierte Funnels & E-Mail-Marketing aufsetzen",
 
             # 📌 Vertrieb & Kundengewinnung
             "Vernetzen mit Profilen",
             "Termine setten im Chat",
-            "Qualifizierungstelefonate führen",
-            "Sales Calls führen",
             "Angebote versenden",
             "Sales Calls auswerten",
             "Follow-up mit Interessenten & Leads",
-            "Angebote & Preise kalkulieren",
-            "Testimonials & Fallstudien sammeln",
 
             # 📌 Kundenbetreuung
             "Fragen beantworten (E-Mail, WhatsApp, Gruppe)",
-            "Community-Management in Gruppen (z.B. Facebook, Telegram, Discord)",
-            "Onboarding neuer Kunden (Einführung, Erwartungen klären)",
-            "Offboarding-Prozess & Kundenbindung verbessern",
             "Betreuung & Nachbereitung von Coaching-Teilnehmern",
             "Notizen & Fortschrittsberichte für Kunden führen",
 
             # 📌 Administration & Organisation
             "Kalender & Termine organisieren",
-            "Meetings & Coaching-Sessions planen",
             "Rechnungen schreiben & Buchhaltung führen",
-            "Tools & Software verwalten (z.B. Zoom, Notion, Kajabi)",
-            "Kundendaten pflegen & verwalten",
-            "Datenschutz & rechtliche Vorgaben beachten",
-            "E-Mails & Anfragen beantworten",
-            "Dokumentationen & Arbeitsabläufe strukturieren",
 
             # 📌 Strategie & Weiterentwicklung
             "Eigene Positionierung & Branding verbessern",
@@ -76,8 +59,6 @@ def main():
             "Markt- & Wettbewerbsanalyse durchführen",
             "Angebote & Programme weiterentwickeln",
             "Persönliche Weiterbildung (Kurse, Bücher, Mentoring)",
-            "Preisstrategie & Angebotsstruktur überdenken",
-            "Feedback auswerten & das Coaching-Angebot optimieren"
         ]
 
     # Kompetenz und Freude für jede Aufgabe zwischenspeichern
