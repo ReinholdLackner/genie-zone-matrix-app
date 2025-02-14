@@ -9,25 +9,26 @@ def clamp(val, min_val=0, max_val=10):
 
 def get_zone(competence, joy):
     """
-    Zoneneinteilung (nach getauschten Achsen):
-      - 🔴 Automatisierungs-Zone = niedrige Kompetenz (<=5) UND niedrige Freude (<=5)
-      - 🟢 KI-Unterstützungs-Zone = niedrige Kompetenz (<=5) UND hohe Freude (>5)
-      - 🟡 Gefahren-Zone = hohe Kompetenz (>5) UND niedrige Freude (<=5)
-      - 🔵 Genie-Zone = hohe Kompetenz (>5) UND hohe Freude (>5)
+    Zoneneinteilung für Y=Kompetenz, X=Freude:
+
+      🔴 Automatisierungs-Zone: x ≤ 5 und y ≤ 5
+      🟢 KI-Unterstützungs-Zone: x > 5 und y ≤ 5
+      🟡 Gefahren-Zone: x ≤ 5 und y > 5
+      🔵 Genie-Zone: x > 5 und y > 5
     """
-    if competence <= 5 and joy <= 5:
+    if joy <= 5 and competence <= 5:
         return "🔴 Automatisierungs-Zone"
-    elif competence <= 5 and joy > 5:
+    elif joy > 5 and competence <= 5:
         return "🟢 KI-Unterstützungs-Zone"
-    elif competence > 5 and joy <= 5:
+    elif joy <= 5 and competence > 5:
         return "🟡 Gefahren-Zone"
     else:
         return "🔵 Genie-Zone"
 
 def main():
-    st.title("Coach Aufgabenliste (Achsen getauscht, KI- & Gefahren-Zone korrigiert)")
+    st.title("Coach Aufgabenliste (Freude = X, Kompetenz = Y)")
 
-    # 1) Aufgabenliste
+    # -- 1) Aufgabenliste in Session State
     if "tasks" not in st.session_state:
         st.session_state.tasks = [
             # 📌 Content-Erstellung & Marketing
@@ -60,22 +61,21 @@ def main():
             "Persönliche Weiterbildung",
         ]
 
-    # Kompetenz/Freude initialisieren
     if "competence" not in st.session_state:
         st.session_state.competence = {}
     if "joy" not in st.session_state:
         st.session_state.joy = {}
 
-    # Standardwerte
+    # -- 2) Standardwerte
     for t in st.session_state.tasks:
         if t not in st.session_state.competence:
             st.session_state.competence[t] = 5
         if t not in st.session_state.joy:
             st.session_state.joy[t] = 5
 
-    # 2) Neue Aufgabe hinzufügen
+    # -- 3) Neue Aufgabe hinzufügen
     st.subheader("Neue Aufgabe hinzufügen")
-    new_task = st.text_input("Aufgabe eingeben (Hinweis: Button ggf. 2x drücken)")
+    new_task = st.text_input("Aufgabe eingeben (Button ggf. 2x drücken)")
     if st.button("Hinzufügen"):
         if new_task.strip() and new_task not in st.session_state.tasks:
             st.session_state.tasks.append(new_task)
@@ -83,7 +83,7 @@ def main():
             st.session_state.joy[new_task] = 5
             st.success(f"Aufgabe '{new_task}' hinzugefügt!")
 
-    # 3) Bewertung via Slider
+    # -- 4) Slider für jede Aufgabe
     st.subheader("Bewerte jede Aufgabe (Kompetenz & Freude von 1-10)")
     for task in st.session_state.tasks:
         with st.expander(f"Aufgabe: {task}", expanded=False):
@@ -100,31 +100,31 @@ def main():
                 key=f"joy_{task}"
             )
 
-    # 4) Tabelle
+    # -- 5) Tabelle mit Zonen
     st.subheader("Auswertung: Welche Aufgabe liegt in welcher Zone?")
     data = []
     for task in st.session_state.tasks:
-        comp = st.session_state.competence[task]
-        joy = st.session_state.joy[task]
-        zone = get_zone(comp, joy)
-        data.append({"Aufgabe": task, "Kompetenz": comp, "Freude": joy, "Zone": zone})
+        c = st.session_state.competence[task]
+        j = st.session_state.joy[task]
+        zone = get_zone(c, j)
+        data.append({"Aufgabe": task, "Kompetenz": c, "Freude": j, "Zone": zone})
     df = pd.DataFrame(data)
     st.write(df)
 
-    # 5) Diagramm: X = Freude, Y = Kompetenz
+    # -- 6) Diagramm: X=Freude, Y=Kompetenz
     st.subheader("Freude (X-Achse) vs. Kompetenz (Y-Achse)")
 
-    # Zufalls-Jitter gegen Überdeckung
+    # Zufälliger Jitter zur Vermeidung von Punktüberlappungen
     df["Joy_jitter"] = [
-        clamp(y + random.uniform(-0.2, 0.2), 0, 10) for y in df["Freude"]
+        clamp(val + random.uniform(-0.2, 0.2), 0, 10) for val in df["Freude"]
     ]
     df["Comp_jitter"] = [
-        clamp(x + random.uniform(-0.2, 0.2), 0, 10) for x in df["Kompetenz"]
+        clamp(val + random.uniform(-0.2, 0.2), 0, 10) for val in df["Kompetenz"]
     ]
 
-    # Skalen erweitern (falls Labels außerhalb sein sollen)
     base = alt.Chart(df).encode(
-        x=alt.X("Joy_jitter:Q",  scale=alt.Scale(domain=[-3,13]), title="Freude"),
+        # Domain größer, damit Beschriftungen am Rand (außerhalb) Platz haben
+        x=alt.X("Joy_jitter:Q", scale=alt.Scale(domain=[-3,13]), title="Freude"),
         y=alt.Y("Comp_jitter:Q", scale=alt.Scale(domain=[-3,13]), title="Kompetenz"),
         tooltip=["Aufgabe", "Kompetenz", "Freude", "Zone"]
     )
@@ -132,22 +132,28 @@ def main():
     # Punkte
     points = base.mark_circle(size=100).encode(color="Zone")
 
-    # Label unter den Punkten zentriert
+    # Labels unter dem Punkt
     labels = base.mark_text(
-        align='center',
-        baseline='top',
-        dy=5
-    ).encode(text="Aufgabe")
+        align='center',  # horizontal zentriert
+        baseline='top',  # Textbaseline oben -> unterhalb des Kreises
+        dy=5             # Abstand nach unten
+    ).encode(
+        text="Aufgabe"
+    )
 
-    # Linien bei Freude=5 und Kompetenz=5
+    # Trennlinien: x=5 (Freude), y=5 (Kompetenz)
     vline = alt.Chart(pd.DataFrame({'x': [5]})).mark_rule(color='gray').encode(x='x')
     hline = alt.Chart(pd.DataFrame({'y': [5]})).mark_rule(color='gray').encode(y='y')
 
-    # Zonenlabels außerhalb
+    # Quadrantenlabels (außerhalb: links, rechts)
     quadrant_labels_df = pd.DataFrame([
+        # LINKS UNTEN (x<5,y<5): Automatisierung
         {"x": -2, "y": 2,  "label": "🔴 Automatisierungs-Zone"},
-        {"x": 12, "y": 2,  "label": "🟡 Gefahren-Zone"},
-        {"x": -2, "y": 8,  "label": "🟢 KI-Unterstützungs-Zone"},
+        # RECHTS UNTEN (x>5,y<5): KI-Unterstützung
+        {"x": 12, "y": 2,  "label": "🟢 KI-Unterstützungs-Zone"},
+        # LINKS OBEN (x<5,y>5): Gefahren
+        {"x": -2, "y": 8,  "label": "🟡 Gefahren-Zone"},
+        # RECHTS OBEN (x>5,y>5): Genie
         {"x": 12, "y": 8,  "label": "🔵 Genie-Zone"}
     ])
     quadrant_labels = alt.Chart(quadrant_labels_df).mark_text(
@@ -160,25 +166,22 @@ def main():
         text='label:N'
     )
 
-    chart = alt.layer(
-        points,
-        labels,
-        vline,
-        hline,
-        quadrant_labels
-    ).properties(width=900, height=700).interactive()
+    chart = alt.layer(points, labels, vline, hline, quadrant_labels).properties(
+        width=900,
+        height=700
+    ).interactive()
 
-    # Keine Gitterlinien, kein Rahmen
+    # Grid und Rahmen entfernen
     chart = chart.configure_axis(grid=False).configure_view(stroke=None)
     st.altair_chart(chart, use_container_width=False)
 
     st.markdown(
         """
         **Quadranten-Übersicht** (Freude = X, Kompetenz = Y)  
-        - 🔴 **Automatisierungs-Zone**: niedrige Freude (x≤5), niedrige Kompetenz (y≤5)  
-        - 🟢 **KI-Unterstützungs-Zone**: hohe Freude (x>5), niedrige Kompetenz (y≤5)  
-        - 🟡 **Gefahren-Zone**: niedrige Freude (x≤5), hohe Kompetenz (y>5)  
-        - 🔵 **Genie-Zone**: hohe Freude (x>5), hohe Kompetenz (y>5)
+        - 🔴 **Automatisierungs-Zone**: niedrige Freude (**x ≤ 5**), niedrige Kompetenz (**y ≤ 5**)  
+        - 🟢 **KI-Unterstützungs-Zone**: **hohe Freude** (x > 5), **niedrige Kompetenz** (y ≤ 5)  
+        - 🟡 **Gefahren-Zone**: **niedrige Freude** (x ≤ 5), **hohe Kompetenz** (y > 5)  
+        - 🔵 **Genie-Zone**: **hohe Freude** (x > 5), **hohe Kompetenz** (y > 5)
         """
     )
 
