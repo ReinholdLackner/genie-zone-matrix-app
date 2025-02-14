@@ -1,59 +1,102 @@
 import streamlit as st
 
-# Titel der App
-st.title("Coach-Task-Manager: Überblick über deine wöchentlichen Aufgaben")
+def main():
+    # 1) Session State initialisieren (Tasks & Selektionsstatus)
+    if "tasks" not in st.session_state:
+        st.session_state.tasks = [
+            # 📌 Content-Erstellung & Marketing
+            "Content-Ideen entwickeln",
+            "Beiträge für Social Media schreiben",
+            "Reels für Social Media drehen",
+            "Podcasts oder Audioformate aufnehmen",
+            "Blogartikel schreiben",
+            "Email-Newsletter schreiben",
+            "Webinare oder Live-Events planen & moderieren",
+            "Content für YouTube oder andere Plattformen produzieren",
+            "Lead Magnets (z.B. E-Books, Checklisten, Webinare) erstellen",
+            "Inhalte für Online-Kurse oder Memberships erstellen",
+            "Content repurposen (z.B. Blogartikel in Social-Media-Posts umwandeln)",
+            "Verkaufsseiten & Landingpages erstellen",
+            "Automatisierte Funnels & E-Mail-Marketing aufsetzen",
 
-st.write("Wähle deine wöchentlichen Aufgaben aus der Liste oder füge eigene hinzu.")
+            # 📌 Vertrieb & Kundengewinnung
+            "Vernetzen mit Profilen",
+            "Termine setten im Chat",
+            "Qualifizierungstelefonate führen",
+            "Sales Calls führen",
+            "Angebote versenden",
+            "Sales Calls auswerten",
+            "Follow-up mit Interessenten & Leads",
+            "Angebote & Preise kalkulieren",
+            "Testimonials & Fallstudien sammeln",
 
-# Vordefinierte Aufgabenliste
-default_tasks = [
-    "Content-Ideen entwickeln", "Beiträge für Social Media schreiben", "Reels für Social Media drehen",
-    "Podcasts oder Audioformate aufnehmen", "Blogartikel schreiben", "Email-Newsletter schreiben",
-    "Webinare oder Live-Events planen & moderieren", "Content für YouTube oder andere Plattformen produzieren",
-    "Lead Magnets (z.B. E-Books, Checklisten, Webinare) erstellen", "Inhalte für Online-Kurse oder Memberships erstellen",
-    "Content repurposen (z.B. Blogartikel in Social-Media-Posts umwandeln)", "Verkaufsseiten & Landingpages erstellen",
-    "Automatisierte Funnels & E-Mail-Marketing aufsetzen", "Vernetzen mit Profilen", "Termine setten im Chat",
-    "Qualifizierungstelefonate führen", "Sales Calls führen", "Angebote versenden", "Sales Calls auswerten",
-    "Follow-up mit Interessenten & Leads", "Angebote & Preise kalkulieren", "Testimonials & Fallstudien sammeln",
-    "Fragen beantworten (E-Mail, Whatsapp, Gruppe)", "Community-Management in Gruppen (z.B. Facebook, Telegram, Discord)",
-    "Onboarding neuer Kunden (Einführung, Erwartungen klären)", "Offboarding-Prozess & Kundenbindung verbessern",
-    "Betreuung & Nachbereitung von Coaching-Teilnehmern", "Notizen & Fortschrittsberichte für Kunden führen",
-    "Kalender & Termine organisieren", "Meetings & Coaching-Sessions planen", "Rechnungen schreiben & Buchhaltung führen",
-    "Tools & Software verwalten (z.B. Zoom, Notion, Kajabi)", "Kundendaten pflegen & verwalten", "Datenschutz & rechtliche Vorgaben beachten",
-    "E-Mails & Anfragen beantworten", "Dokumentationen & Arbeitsabläufe strukturieren", "Eigene Positionierung & Branding verbessern",
-    "Business-Strategie entwickeln & optimieren", "Markt- & Wettbewerbsanalyse durchführen", "Angebote & Programme weiterentwickeln",
-    "Persönliche Weiterbildung (Kurse, Bücher, Mentoring)", "Preisstrategie & Angebotsstruktur überdenken",
-    "Feedback auswerten & das Coaching-Angebot optimieren"
-]
+            # 📌 Kundenbetreuung
+            "Fragen beantworten (E-Mail, WhatsApp, Gruppe)",
+            "Community-Management in Gruppen (z.B. Facebook, Telegram, Discord)",
+            "Onboarding neuer Kunden (Einführung, Erwartungen klären)",
+            "Offboarding-Prozess & Kundenbindung verbessern",
+            "Betreuung & Nachbereitung von Coaching-Teilnehmern",
+            "Notizen & Fortschrittsberichte für Kunden führen",
 
-# Session State initialisieren
-if "tasks" not in st.session_state:
-    st.session_state.tasks = default_tasks.copy()
-if "selected_tasks" not in st.session_state:
-    st.session_state.selected_tasks = []
+            # 📌 Administration & Organisation
+            "Kalender & Termine organisieren",
+            "Meetings & Coaching-Sessions planen",
+            "Rechnungen schreiben & Buchhaltung führen",
+            "Tools & Software verwalten (z.B. Zoom, Notion, Kajabi)",
+            "Kundendaten pflegen & verwalten",
+            "Datenschutz & rechtliche Vorgaben beachten",
+            "E-Mails & Anfragen beantworten",
+            "Dokumentationen & Arbeitsabläufe strukturieren",
 
-# Auswahl der Aufgaben
-st.write("## Wähle deine Aufgaben aus")
-for task in st.session_state.tasks:
-    if st.checkbox(task, value=(task in st.session_state.selected_tasks)):
-        if task not in st.session_state.selected_tasks:
-            st.session_state.selected_tasks.append(task)
+            # 📌 Strategie & Weiterentwicklung
+            "Eigene Positionierung & Branding verbessern",
+            "Business-Strategie entwickeln & optimieren",
+            "Markt- & Wettbewerbsanalyse durchführen",
+            "Angebote & Programme weiterentwickeln",
+            "Persönliche Weiterbildung (Kurse, Bücher, Mentoring)",
+            "Preisstrategie & Angebotsstruktur überdenken",
+            "Feedback auswerten & das Coaching-Angebot optimieren"
+        ]
+    # Diese Liste speichert für jede Task, ob sie angehakt ist oder nicht
+    if "selected" not in st.session_state:
+        st.session_state.selected = [False] * len(st.session_state.tasks)
+
+    st.title("Coach Aufgabenliste")
+
+    # 2) Aufgaben als Checkboxes anzeigen
+    st.subheader("Aufgaben auswählen:")
+    for i, task in enumerate(st.session_state.tasks):
+        # Checkbox pro Aufgabe
+        st.session_state.selected[i] = st.checkbox(
+            task,
+            key=f"task_{i}", 
+            value=st.session_state.selected[i]
+        )
+
+    # 3) Neue Aufgabe hinzufügen
+    st.subheader("Neue Aufgabe hinzufügen")
+    new_task = st.text_input("Aufgabe eingeben:")
+    if st.button("Hinzufügen"):
+        if new_task.strip() and new_task not in st.session_state.tasks:
+            # Neue Aufgabe an die Liste anhängen und
+            # Selektions-Status entsprechend erweitern
+            st.session_state.tasks.append(new_task)
+            st.session_state.selected.append(False)
+            st.success(f"Aufgabe '{new_task}' hinzugefügt!")
+
+    # 4) Ausgewählte Aufgaben sammeln
+    selected_tasks = [
+        t for t, sel in zip(st.session_state.tasks, st.session_state.selected) if sel
+    ]
+
+    # 5) Ausgewählte Aufgaben anzeigen
+    if selected_tasks:
+        st.subheader("Aktuell ausgewählte Aufgaben:")
+        for stask in selected_tasks:
+            st.write(f"- {stask}")
     else:
-        if task in st.session_state.selected_tasks:
-            st.session_state.selected_tasks.remove(task)
+        st.info("Noch keine Aufgaben ausgewählt.")
 
-# Eigene Aufgaben hinzufügen
-st.write("## Eigene Aufgaben hinzufügen")
-new_task = st.text_input("Neue Aufgabe eingeben und auf 'Hinzufügen' klicken:")
-if st.button("Hinzufügen"):
-    if new_task and new_task not in st.session_state.tasks:
-        st.session_state.tasks.append(new_task)
-        st.experimental_rerun()
-
-# Anzeige der gewählten Aufgaben
-st.write("## Deine ausgewählten Aufgaben")
-if st.session_state.selected_tasks:
-    for task in st.session_state.selected_tasks:
-        st.write(f"✅ {task}")
-else:
-    st.write("Noch keine Aufgaben ausgewählt.")
+# Streamlit ruft main() bei App-Start auf
+if __name__ == "__main__":
+    main()
