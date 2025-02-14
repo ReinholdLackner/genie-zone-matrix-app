@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import altair as alt
 
 # Hilfsfunktion für die Zoneneinteilung
 def get_zone(competence, joy):
@@ -22,10 +23,10 @@ def get_zone(competence, joy):
 def main():
     st.title("Coach Aufgabenliste mit Bewertung")
 
-    # Session State für Aufgaben und Bewertungen initialisieren
+    # 1) Session State vorbereiten (Tasks, Kompetenz-/Freude-Werte)
     if "tasks" not in st.session_state:
         st.session_state.tasks = [
-            # Beispiel-Aufgaben
+            # 📌 Content-Erstellung & Marketing
             "Content-Ideen entwickeln",
             "Beiträge für Social Media schreiben",
             "Reels für Social Media drehen",
@@ -34,26 +35,67 @@ def main():
             "Email-Newsletter schreiben",
             "Webinare oder Live-Events planen & moderieren",
             "Content für YouTube oder andere Plattformen produzieren",
-            "Lead Magnets erstellen",
+            "Lead Magnets (z.B. E-Books, Checklisten, Webinare) erstellen",
+            "Inhalte für Online-Kurse oder Memberships erstellen",
+            "Content repurposen (z.B. Blogartikel in Social-Media-Posts umwandeln)",
             "Verkaufsseiten & Landingpages erstellen",
-            # usw. weitere wie gewünscht ...
+            "Automatisierte Funnels & E-Mail-Marketing aufsetzen",
+
+            # 📌 Vertrieb & Kundengewinnung
+            "Vernetzen mit Profilen",
+            "Termine setten im Chat",
+            "Qualifizierungstelefonate führen",
+            "Sales Calls führen",
+            "Angebote versenden",
+            "Sales Calls auswerten",
+            "Follow-up mit Interessenten & Leads",
+            "Angebote & Preise kalkulieren",
+            "Testimonials & Fallstudien sammeln",
+
+            # 📌 Kundenbetreuung
+            "Fragen beantworten (E-Mail, WhatsApp, Gruppe)",
+            "Community-Management in Gruppen (z.B. Facebook, Telegram, Discord)",
+            "Onboarding neuer Kunden (Einführung, Erwartungen klären)",
+            "Offboarding-Prozess & Kundenbindung verbessern",
+            "Betreuung & Nachbereitung von Coaching-Teilnehmern",
+            "Notizen & Fortschrittsberichte für Kunden führen",
+
+            # 📌 Administration & Organisation
+            "Kalender & Termine organisieren",
+            "Meetings & Coaching-Sessions planen",
+            "Rechnungen schreiben & Buchhaltung führen",
+            "Tools & Software verwalten (z.B. Zoom, Notion, Kajabi)",
+            "Kundendaten pflegen & verwalten",
+            "Datenschutz & rechtliche Vorgaben beachten",
+            "E-Mails & Anfragen beantworten",
+            "Dokumentationen & Arbeitsabläufe strukturieren",
+
+            # 📌 Strategie & Weiterentwicklung
+            "Eigene Positionierung & Branding verbessern",
+            "Business-Strategie entwickeln & optimieren",
+            "Markt- & Wettbewerbsanalyse durchführen",
+            "Angebote & Programme weiterentwickeln",
+            "Persönliche Weiterbildung (Kurse, Bücher, Mentoring)",
+            "Preisstrategie & Angebotsstruktur überdenken",
+            "Feedback auswerten & das Coaching-Angebot optimieren"
         ]
 
-    # Dictionaries zur Speicherung von Kompetenz- und Freude-Werten
+    # Kompetenz und Freude für jede Aufgabe zwischenspeichern
     if "competence" not in st.session_state:
         st.session_state.competence = {}
     if "joy" not in st.session_state:
         st.session_state.joy = {}
 
-    # Sicherstellen, dass alle bestehenden Aufgaben mindestens einen Defaultwert haben
+    # Standardwerte für alle Aufgaben
     for t in st.session_state.tasks:
         if t not in st.session_state.competence:
             st.session_state.competence[t] = 5
         if t not in st.session_state.joy:
             st.session_state.joy[t] = 5
 
-    # 1) Neue Aufgabe hinzufügen (direkt inkl. Defaultwerte für Schieber)
-    new_task = st.text_input("Neue Aufgabe eingeben (Hinweis: Button muss evtl. 2x gedrückt werden):")
+    # 2) Neue Aufgabe hinzufügen
+    st.subheader("Neue Aufgabe hinzufügen")
+    new_task = st.text_input("Aufgabe eingeben (Hinweis: Button muss evtl. 2x gedrückt werden)")
     if st.button("Hinzufügen"):
         if new_task.strip() and new_task not in st.session_state.tasks:
             st.session_state.tasks.append(new_task)
@@ -61,24 +103,24 @@ def main():
             st.session_state.joy[new_task] = 5
             st.success(f"Aufgabe '{new_task}' hinzugefügt!")
 
-    # 2) Für jede Aufgabe zwei Schieber anzeigen (Kompetenz & Freude)
-    st.subheader("Bewertung jeder Aufgabe")
+    # 3) Für jede Aufgabe Schieber (Kompetenz & Freude)
+    st.subheader("Bewerte jede Aufgabe nach Kompetenz & Freude (1-10)")
     for task in st.session_state.tasks:
         with st.expander(f"Aufgabe: {task}", expanded=False):
             st.session_state.competence[task] = st.slider(
-                f"Kompetenz bei '{task}' (1-10)",
+                f"Kompetenz: Wie gut kannst du '{task}'?",
                 min_value=1, max_value=10,
                 value=st.session_state.competence[task],
                 key=f"comp_{task}"
             )
             st.session_state.joy[task] = st.slider(
-                f"Freude an '{task}' (1-10)",
+                f"Freude: Wie gern machst du '{task}'?",
                 min_value=1, max_value=10,
                 value=st.session_state.joy[task],
                 key=f"joy_{task}"
             )
 
-    # 3) Auswertung in einer Tabelle
+    # 4) Auswertung in einer Tabelle
     st.subheader("Auswertung: Welche Aufgabe liegt in welcher Zone?")
     data = []
     for task in st.session_state.tasks:
@@ -95,9 +137,32 @@ def main():
     df = pd.DataFrame(data)
     st.write(df)
 
+    # 5) Diagramm: 4 Quadranten
+    st.subheader("Visualisierung deiner Aufgaben in der 4-Quadranten-Matrix (Kompetenz vs. Freude)")
+
+    # Altair-Chart: Punktekdiagramm
+    base = alt.Chart(df).encode(
+        x=alt.X("Kompetenz", scale=alt.Scale(domain=[1,10])),
+        y=alt.Y("Freude", scale=alt.Scale(domain=[1,10])),
+        tooltip=["Aufgabe", "Kompetenz", "Freude", "Zone"]
+    )
+
+    points = base.mark_circle(size=100).encode(
+        color="Zone"
+    )
+
+    # Linien bei x=5.5 und y=5.5, um die Quadranten klar zu trennen
+    # (Weil <=5 = niedrige Kompetenz/Freude und >5 = hohe Kompetenz/Freude)
+    vline = alt.Chart(pd.DataFrame({'x': [5.5]})).mark_rule(color='gray').encode(x='x')
+    hline = alt.Chart(pd.DataFrame({'y': [5.5]})).mark_rule(color='gray').encode(y='y')
+
+    chart = alt.layer(points, vline, hline).interactive()
+
+    st.altair_chart(chart, use_container_width=True)
+
     st.markdown(
         """
-        **Zonen-Erläuterung**  
+        **Quadranten-Übersicht**  
         - 🔴 **Automatisierungs-Zone** (niedrige Freude, niedrige Kompetenz) → Automatisieren oder delegieren!  
         - 🟡 **Gefahren-Zone** (hohe Kompetenz, niedrige Freude) → Delegieren oder neu bewerten!  
         - 🟢 **KI-Unterstützungs-Zone** (niedrige Kompetenz, hohe Freude) → Mit KI optimieren!  
